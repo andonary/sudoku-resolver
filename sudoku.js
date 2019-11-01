@@ -3,20 +3,20 @@ function sudoku(puzzle) {
     const getRowIds = (currentBoxId) => {
         if (currentBoxId <= 2) return [0, 1, 2];
         if (2 < currentBoxId <= 5) return [3, 4, 5];
-        return [6, 7, 8];
+        if (5 < currentBoxId) return [6, 7, 8];
     };
     const getColumnIds = (currentBoxId) => {
         const idModulo = currentBoxId % 3;
         if (idModulo % 3 === 0) return [0, 1, 2];
         if (idModulo % 3 === 1) return [3, 4, 5];
-        return [6, 7, 8];
+        if (idModulo % 3 === 2) return [6, 7, 8];
     };
     // on fait un essai aléatoire
     const puzzleTry = JSON.parse(JSON.stringify(puzzle));
-    allBoxes.forEach((box, boxId) => {
+    const fillBoxRandomly = (boxNumber) => {
         const leftNumber = [1,2,3,4,5,6,7,8,9];
-        const rowIds = getRowIds(boxId);
-        const columnIds = getColumnIds(boxId);
+        const rowIds = getRowIds(boxNumber);
+        const columnIds = getColumnIds(boxNumber);
         // on filtre les nombres déjà utilisés par la grille d'origine
         for (const rowId of rowIds) {
             for (const columnId of columnIds) {
@@ -36,6 +36,10 @@ function sudoku(puzzle) {
                 leftNumber.splice(rdnLeftNumberId, 1);
             }
         }
+    };
+    // on le fait intégralement
+    allBoxes.forEach((box, boxId) => {
+        fillBoxRandomly(boxId);
     });
     // méthode stochastique, on compte le nombre de doublons de chaque ligne et colonne
     const getNumberOfDouble = (row) => {
@@ -51,17 +55,49 @@ function sudoku(puzzle) {
         })
         return count;
     };
-    let rowDouble = new Array(9).fill(0);
-    rowDouble = rowDouble.map((x, i) => getNumberOfDouble(puzzleTry[i]));
-    let colDouble = new Array(9).fill(0);
-    const rowIt = new Array(9).fill(0);
-    const colIt = new Array(9).fill(0);
-    colDouble = colIt.map((y, j) => {
-        const colInRow = rowIt.map((x, i) => puzzleTry[i][j]);
-        return getNumberOfDouble(colInRow);
-    });
-    return { rowDouble, colDouble };
-    // return puzzleTry;
+    const fillUntilDone = () => {
+        let rowDouble = new Array(9).fill(0);
+        rowDouble = rowDouble.map((x, i) => getNumberOfDouble(puzzleTry[i]));
+        let colDouble = new Array(9).fill(0);
+        const rowIt = new Array(9).fill(0);
+        const colIt = new Array(9).fill(0);
+        colDouble = colIt.map((y, j) => {
+            const colInRow = rowIt.map((x, i) => puzzleTry[i][j]);
+            return getNumberOfDouble(colInRow);
+        });
+        // si aucun doublons, on a la solution
+        const sumRowDouble = rowDouble.reduce((acc, val) => {
+            return acc + val;
+        }, 0);
+        const sumColDouble = colDouble.reduce((acc, val) => {
+            return acc + val;
+        }, 0);
+        if (sumRowDouble === 0 && sumColDouble === 0) {
+            return puzzleTry;
+        }
+        // on cherche la box qui possède le plus d'erreur
+        let maxCounted = 0;
+        const allBoxesErrorCount = allBoxes.map((box, boxId) => {
+            const rowIds = getRowIds(boxId);
+            const columnIds = getColumnIds(boxId);
+            let count = 0;
+            rowIds.forEach(rowId => {
+                count += rowDouble[rowId];
+            });
+            columnIds.forEach(colId => {
+                count += colDouble[colId];
+            });
+            if (count > maxCounted) {
+                maxCounted = count;
+            }
+            return count;
+        });
+        const boxIdToRedo = allBoxesErrorCount.findIndex(el => el === maxCounted);
+        fillBoxRandomly(boxIdToRedo);
+        return fillUntilDone();
+    };
+    // return { rowDouble, colDouble, allBoxesErrorCount, maxCounted };
+    return fillUntilDone();
 }
 
 

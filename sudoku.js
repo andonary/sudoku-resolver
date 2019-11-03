@@ -1,15 +1,15 @@
 function sudoku(puzzle) {
     const allBoxes = new Array(9).fill(0);
     const getRowIds = (currentBoxId) => {
-        if (currentBoxId <= 2) return [0, 1, 2];
-        if (2 < currentBoxId <= 5) return [3, 4, 5];
-        if (5 < currentBoxId) return [6, 7, 8];
+        if (currentBoxId < 3) return [0, 1, 2];
+        if (currentBoxId < 6) return [3, 4, 5];
+        if (currentBoxId < 9) return [6, 7, 8];
     };
     const getColumnIds = (currentBoxId) => {
         const idModulo = currentBoxId % 3;
-        if (idModulo % 3 === 0) return [0, 1, 2];
-        if (idModulo % 3 === 1) return [3, 4, 5];
-        if (idModulo % 3 === 2) return [6, 7, 8];
+        if (idModulo === 0) return [0, 1, 2];
+        if (idModulo === 1) return [3, 4, 5];
+        if (idModulo === 2) return [6, 7, 8];
     };
     // on fait un essai aléatoire
     const puzzleTry = JSON.parse(JSON.stringify(puzzle));
@@ -52,7 +52,7 @@ function sudoku(puzzle) {
                 count++;
                 alreadyCount.push(nb);
             }
-        })
+        });
         return count;
     };
     const fillUntilDone = () => {
@@ -77,9 +77,9 @@ function sudoku(puzzle) {
         }
         // on cherche la box qui possède le plus d'erreur
         let maxCounted = 0;
-        const allBoxesErrorCount = allBoxes.map((box, boxId) => {
-            const rowIds = getRowIds(boxId);
-            const columnIds = getColumnIds(boxId);
+        const allBoxesErrorCount = allBoxes.map((box, _boxId) => {
+            const rowIds = getRowIds(_boxId);
+            const columnIds = getColumnIds(_boxId);
             let count = 0;
             rowIds.forEach(rowId => {
                 count += rowDouble[rowId];

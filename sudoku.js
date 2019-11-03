@@ -76,27 +76,33 @@ function sudoku(puzzle) {
             return puzzleTry;
         }
         // on cherche la box qui possède le plus d'erreur
-        let maxCounted = 0;
         const allBoxesErrorCount = allBoxes.map((box, _boxId) => {
             const rowIds = getRowIds(_boxId);
             const columnIds = getColumnIds(_boxId);
-            let count = 0;
+            let countErrors = 0;
             rowIds.forEach(rowId => {
-                count += rowDouble[rowId];
+                countErrors += rowDouble[rowId];
             });
             columnIds.forEach(colId => {
-                count += colDouble[colId];
+                countErrors += colDouble[colId];
             });
-            if (count > maxCounted) {
-                maxCounted = count;
-            }
-            return count;
+            return countErrors;
         });
-        const boxIdToRedo = allBoxesErrorCount.findIndex(el => el === maxCounted);
-        fillBoxRandomly(boxIdToRedo);
+        // on corrige les plus grosses erreurs si erreur > 0
+        const maxErrorAllBoxes = [...allBoxesErrorCount].sort((a,b) => b - a);
+        let nIterable = 0;
+        let previousBoxId = -1;
+        for (const maxError of maxErrorAllBoxes) {
+            if (maxError === 0 || nIterable > 2) continue;
+            const boxIdToRedo = allBoxesErrorCount.findIndex(el => el === maxError && el !== previousBoxId);
+            if (boxIdToRedo && boxIdToRedo !== previousBoxId) {
+                fillBoxRandomly(boxIdToRedo);
+            }
+            nIterable++;
+            previousBoxId = boxIdToRedo;
+        };
         return fillUntilDone();
     };
-    // return { rowDouble, colDouble, allBoxesErrorCount, maxCounted };
     return fillUntilDone();
 }
 
